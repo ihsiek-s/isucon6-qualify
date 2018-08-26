@@ -1,0 +1,15 @@
+---
+- name: Create isucon group
+  group:
+    name: isucon
+
+- name: Create isucon user
+  user:
+    name: isucon
+    groups: isucon
+    home: /home/isucon
+
+- name: Set timezone to Asia/Tokyo
+  timezone:
+    name: Asia/Tokyo
+  notify: update timezone

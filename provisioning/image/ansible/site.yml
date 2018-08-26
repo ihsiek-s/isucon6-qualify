@@ -1,0 +1,14 @@
+---
+- hosts: all
+  user: centos
+  become: yes
+  gather_facts: yes
+
+  roles:
+    - devel
+    - base
+    - xbuild
+    - mysql
+    - nginx
+    - deploy
+

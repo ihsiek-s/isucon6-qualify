@@ -1,0 +1,7 @@
+mysql:
+  log_dir: /var/log/mysql
+  service_name: mysqld
+  host: 127.0.0.1
+  root:
+    user: root
+    password: root
