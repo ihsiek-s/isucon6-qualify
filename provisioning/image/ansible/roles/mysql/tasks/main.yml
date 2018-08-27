@@ -35,11 +35,11 @@
 
 - name: copy my.cnf for Debian
   copy:
-    src: ../files/my.cnf
+    src: my.cnf
     dest: /etc/mysql/my.cnf
     owner: root
     group: root
-    mode: 644
+    mode: 0644
   notify:
     - restart mysql
   when: ansible_os_family == 'Debian'
@@ -55,11 +55,11 @@
 
 - name: copy my.cnf for RedHat
   copy:
-    src: ../files/my.cnf
+    src: my.cnf
     dest: /etc/my.cnf
     owner: root
     group: root
-    mode: 644
+    mode: 0644
   notify:
     - restart mysql
   when: ansible_os_family == 'RedHat'
@@ -67,12 +67,8 @@
 - name: mysql service enabled
   systemd:
     name: '{{ mysql.service_name }}'
-    enabled: yes
-
-- name: mysql service start
-  systemd:
-    name: '{{ mysql.service_name }}'
     state: started
+    enabled: yes
 
 - name: check .my.cnf exists
   stat:
@@ -132,3 +128,48 @@
     login_password: '{{ mysql.root.password }}'
     priv: '*.*:ALL'
     state: present
+
+- name: Copy data files
+  copy:
+    src: db
+    dest: /home/isucon/
+    owner: isucon
+    group: isucon
+    mode: 0644
+
+- name: Create databases
+  mysql_db:
+    db: '{{ item }}'
+    state: present
+    login_host: 127.0.0.1
+    login_user: root
+    login_password: root
+  with_items:
+    - isuda
+    - isutar
+
+- name: Import initial data to isuda
+  mysql_db:
+    name: isuda
+    target: '/home/isucon/db/{{ item }}.sql'
+    state: import
+    login_host: 127.0.0.1
+    login_user: root
+    login_password: root
+  with_items:
+    - isuda
+    - isuda_user
+    - isuda_entry
+  ignore_errors: yes
+
+- name: Import initial data to isutar
+  mysql_db:
+    name: isutar
+    target: '/home/isucon/db/{{ item }}.sql'
+    state: import
+    login_host: 127.0.0.1
+    login_user: root
+    login_password: root
+  with_items:
+    - isutar
+  ignore_errors: yes

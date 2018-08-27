@@ -11,19 +11,19 @@
   when: ansible_os_family == 'RedHat'
 
 - copy:
-    src: ../files/nginx.php.conf
+    src: nginx.php.conf
     dest: /etc/nginx/nginx.php.conf
     owner: root
     mode: 644
 
 - copy:
-    src: ../files/fastcgi_params
+    src: fastcgi_params
     dest: /etc/nginx/fastcgi_params
     owner: root
     mode: 644
 
 - copy:
-    src: ../files/nginx.conf
+    src: nginx.conf
     dest: /etc/nginx/nginx.conf
     owner: root
     mode: 644
@@ -33,9 +33,5 @@
 - name: service nginx enabled
   systemd:
     name: nginx
-    enabled: true
-
-- name: service nginx started
-  systemd:
-    name: nginx
     state: started
+    enabled: true

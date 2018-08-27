@@ -1,6 +1,5 @@
 ---
 - hosts: all
-  user: centos
   become: yes
   gather_facts: yes
 

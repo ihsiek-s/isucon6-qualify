@@ -28,7 +28,7 @@
 - name: Build php
   command: >
     /home/isucon/.xbuild/php-install 7.0.10 /home/isucon/.local/php --
-    --disable-phar --with-pcre-regex --with-zlib --enable-fpm --enable-pdo
+    --with-pcre-regex --with-zlib --enable-fpm --enable-pdo
     --with-mysqli=mysqlnd --with-pdo-mysql=mysqlnd --with-openssl
     --with-pcre-regex --with-pcre-dir --with-libxml-dir --enable-opcache
     --enable-bcmath --with-bz2 --enable-calendar --enable-cli --enable-shmop
@@ -37,19 +37,3 @@
     --with-curl --enable-zip --with-pear
   args:
     creates: /home/isucon/.local/php/bin/php
-
-#- hosts: all
-#  become: yes
-#  gather_facts: no
-#  tags:
-#    - prod
-#  tasks:
-#    - unarchive:
-#        copy: no
-#        src: https://isucon6qimage.example.com/isucon6q/local.tar.gz
-#        dest: /home/isucon/
-#        creates: /home/isucon/.local
-#        owner: isucon
-#        group: isucon
-
-
