@@ -44,15 +44,6 @@
     - restart mysql
   when: ansible_os_family == 'Debian'
 
-- name: Create /var/log/mysql
-  file:
-    name: /var/log/mysql
-    state: directory
-    owner: mysql
-    group: mysql
-    mode: 0755
-  when: ansible_os_family == 'RedHat'
-
 - name: copy my.cnf for RedHat
   copy:
     src: my.cnf
@@ -76,7 +67,7 @@
   register: mycnf
 
 - name: get temporary password
-  shell: grep "temporary password" /var/log/mysql/error.log | awk '{print $NF}'
+  shell: grep "temporary password" /var/log/mysqld.log | awk '{print $NF}'
   register: mysql_default_password
   when: not mycnf.stat.exists
 
