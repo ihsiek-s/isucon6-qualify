@@ -1,28 +1,33 @@
 ---
-- apt:
+- name: Install nginx for Debian
+  apt:
     name: nginx
     state: present
   when: ansible_os_family == 'Debian'
 
-- yum:
+- name: Install nginx for RedHat
+  yum:
     name: nginx
     state: present
     update_cache: true
   when: ansible_os_family == 'RedHat'
 
-- copy:
+- name: Copy nginx.php.conf
+  copy:
     src: nginx.php.conf
     dest: /etc/nginx/nginx.php.conf
     owner: root
     mode: 644
 
-- copy:
+- name: Copy fastcgi_params
+  copy:
     src: fastcgi_params
     dest: /etc/nginx/fastcgi_params
     owner: root
     mode: 644
 
-- copy:
+- name: Copy nginx.conf
+  copy:
     src: nginx.conf
     dest: /etc/nginx/nginx.conf
     owner: root
@@ -30,7 +35,21 @@
   notify:
     - restart nginx
 
-- name: service nginx enabled
+- name: Install selinux dependencies
+  yum:
+    name: '{{ item }}'
+    state: present
+  with_items:
+    - libselinux-python
+    - libsemanage-python
+
+- name: Allow access from nginx
+  seboolean:
+    name: httpd_can_network_connect
+    persistent: yes
+    state: yes
+
+- name: Enable and start service nginx
   systemd:
     name: nginx
     state: started
