@@ -6,7 +6,7 @@
     group: no
     links: yes
 - synchronize:
-    src: ../../../bin/
+    src: ../../../webapp/bin/
     dest: /home/isucon/bin
     owner: no
     group: no
