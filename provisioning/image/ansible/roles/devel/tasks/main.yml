@@ -96,3 +96,10 @@
     - gd-devel
     - libtidy-devel
   when: ansible_os_family == 'RedHat'
+
+- name: Create symlink to python3
+  file:
+    src: /bin/python3.6
+    dest: /bin/python3
+    state: link
+  when: ansible_os_family == 'RedHat'
