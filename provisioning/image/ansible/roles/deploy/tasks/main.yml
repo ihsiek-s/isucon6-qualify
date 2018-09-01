@@ -1,0 +1,194 @@
+---
+- synchronize:
+    src: ../../../webapp/
+    dest: /home/isucon/webapp
+    owner: no
+    group: no
+    links: yes
+- synchronize:
+    src: ../../../webapp/bin/
+    dest: /home/isucon/bin
+    owner: no
+    group: no
+- file:
+    path: /home/isucon
+    owner: isucon
+    group: isucon
+    state: directory
+    recurse: yes
+  become_user: root
+
+- copy:
+    src: env.sh
+    dest: /home/isucon/env.sh
+    owner: isucon
+    group: isucon
+    mode: 0755
+
+- name: perl
+  become_user: isucon
+  shell: PATH=/home/isucon/.local/perl/bin:$PATH carton install --deployment
+  args:
+    chdir: /home/isucon/webapp/perl
+- name: ruby
+  become_user: isucon
+  shell: PATH=/home/isucon/.local/ruby/bin:$PATH bundle install --deployment
+  args:
+    chdir: /home/isucon/webapp/ruby
+- name: node
+  become_user: isucon
+  shell: PATH=/home/isucon/.local/node/bin:$PATH npm install
+  args:
+    chdir: /home/isucon/webapp/js
+- name: node
+  become_user: isucon
+  shell: PATH=/home/isucon/.local/node/bin:$PATH npm install
+  args:
+    chdir: /home/isucon/webapp/js/node_modules/runkoa
+- name: python
+  become_user: isucon
+  shell: /bin/bash /home/isucon/webapp/python/setup.sh
+  args:
+    chdir: /home/isucon/webapp/python
+- name: go
+  become_user: isucon
+  shell: PATH=/home/isucon/.local/go/bin:$PATH GOROOT=/home/isucon/.local/go GOPATH=/home/isucon/webapp/go make all
+  args:
+    chdir: /home/isucon/webapp/go
+- name: composer
+  become_user: isucon
+  get_url:
+    url: http://getcomposer.org/composer.phar
+    dest: /home/isucon/webapp/php/composer.phar
+    mode: 0755
+- name: php
+  become_user: isucon
+  shell: PATH=/home/isucon/.local/php/bin:$PATH php composer.phar install
+  args:
+    chdir: /home/isucon/webapp/php
+- name: php-fpm (isuda)
+  become_user: isucon
+  copy:
+    src: isuda.php-fpm.conf
+    dest: /home/isucon/.local/php/etc/isuda.php-fpm.conf
+    owner: isucon
+    group: isucon
+    mode: 644
+- name: php-fpm (isutar)
+  become_user: isucon
+  copy:
+    src: isutar.php-fpm.conf
+    dest: /home/isucon/.local/php/etc/isutar.php-fpm.conf
+    owner: isucon
+    group: isucon
+    mode: 644
+
+- name: isupam (systemd)
+  copy:
+    src: isupam.service
+    dest: /etc/systemd/system/isupam.service
+    owner: root
+    mode: 644
+- name: perl isuda (systemd)
+  copy:
+    src: isuda.perl.service
+    dest: /etc/systemd/system/isuda.perl.service
+    owner: root
+    mode: 644
+- name: perl isutar (systemd)
+  copy:
+    src: isutar.perl.service
+    dest: /etc/systemd/system/isutar.perl.service
+    owner: root
+    mode: 644
+- name: ruby isuda (systemd)
+  copy:
+    src: isuda.ruby.service
+    dest: /etc/systemd/system/isuda.ruby.service
+    owner: root
+    mode: 644
+- name: ruby isutar (systemd)
+  copy:
+    src: isutar.ruby.service
+    dest: /etc/systemd/system/isutar.ruby.service
+    owner: root
+    mode: 644
+- name: js isuda (systemd)
+  copy:
+    src: isuda.js.service
+    dest: /etc/systemd/system/isuda.js.service
+    owner: root
+    mode: 644
+- name: js isutar (systemd)
+  copy:
+    src: isutar.js.service
+    dest: /etc/systemd/system/isutar.js.service
+    owner: root
+    mode: 644
+- name: python isuda (systemd)
+  copy:
+    src: isuda.python.service
+    dest: /etc/systemd/system/isuda.python.service
+    owner: root
+    mode: 644
+- name: python isutar (systemd)
+  copy:
+    src: isutar.python.service
+    dest: /etc/systemd/system/isutar.python.service
+    owner: root
+    mode: 644
+- name: go isuda (systemd)
+  copy:
+    src: isuda.go.service
+    dest: /etc/systemd/system/isuda.go.service
+    owner: root
+    mode: 644
+- name: go isutar (systemd)
+  copy:
+    src: isutar.go.service
+    dest: /etc/systemd/system/isutar.go.service
+    owner: root
+    mode: 644
+- name: scala isuda (systemd)
+  copy:
+    src: isuda.scala.service
+    dest: /etc/systemd/system/isuda.scala.service
+    owner: root
+    mode: 644
+- name: scala isutar (systemd)
+  copy:
+    src: isutar.scala.service
+    dest: /etc/systemd/system/isutar.scala.service
+    owner: root
+    mode: 644
+- name: php isuda (systemd)
+  copy:
+    src: isuda.php.service
+    dest: /etc/systemd/system/isuda.php.service
+    owner: root
+    mode: 644
+- name: php isutar (systemd)
+  copy:
+    src: isutar.php.service
+    dest: /etc/systemd/system/isutar.php.service
+    owner: root
+    mode: 644
+
+- name: default application selection (isupam)
+  systemd:
+    name: isupam
+    state: started
+    enabled: yes
+
+- name: default application selection (isuda)
+  systemd:
+    name: isuda.perl
+    state: started
+    enabled: yes
+
+- name: default application selection (isutar)
+  systemd:
+    name: isutar.perl
+    state: started
+    enabled: yes
+

@@ -1,0 +1,13 @@
+---
+- hosts: all
+  become: yes
+  gather_facts: yes
+
+  roles:
+    - devel
+    - base
+    - xbuild
+    - mysql
+    - nginx
+    - deploy
+

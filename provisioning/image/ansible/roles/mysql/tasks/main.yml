@@ -1,0 +1,166 @@
+---
+- name: Set MySQL password
+  debconf:
+    name: mysql-server-5.7
+    question: 'mysql-server/root_password'
+    value: 'root'
+    vtype: 'password'
+  when: ansible_os_family == 'Debian'
+
+- name: Set MySQL password again
+  debconf:
+    name: mysql-server-5.7
+    question: 'mysql-server/root_password_again'
+    value: 'root'
+    vtype: 'password'
+  when: ansible_os_family == 'Debian'
+
+- name: Install MySQL for Debian
+  apt:
+    name: '{{ item }}'
+    state: present
+  with_items:
+    - mysql-server-5.7
+    - mysql-client-5.7
+  when: ansible_os_family == 'Debian'
+
+- name: Install MySQL for RedHat
+  yum:
+    name: '{{ item }}'
+  with_items:
+    - http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm
+    - mysql-community-server
+    - mysql-community-client
+  when: ansible_os_family == 'RedHat'
+
+- name: copy my.cnf for Debian
+  copy:
+    src: my.cnf
+    dest: /etc/mysql/my.cnf
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - restart mysql
+  when: ansible_os_family == 'Debian'
+
+- name: copy my.cnf for RedHat
+  copy:
+    src: my.cnf
+    dest: /etc/my.cnf
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - restart mysql
+  when: ansible_os_family == 'RedHat'
+
+- name: mysql service enabled
+  systemd:
+    name: '{{ mysql.service_name }}'
+    state: started
+    enabled: yes
+
+- name: check .my.cnf exists
+  stat:
+    path: /root/.my.cnf
+  register: mycnf
+
+- name: get temporary password
+  shell: grep "temporary password" /var/log/mysqld.log | awk '{print $NF}'
+  register: mysql_default_password
+  when: not mycnf.stat.exists
+
+- name: deploy init .my.cnf
+  template:
+    src: templates/init_my.cnf.j2
+    dest: /root/.my.cnf
+    owner: root
+    group: root
+    mode: 0644
+  when: not mycnf.stat.exists
+
+- name: change password validation to the easy way
+  shell: |
+    mysql -u root -p'{{ mysql_default_password.stdout }}' --connect-expired-password -e "SET GLOBAL validate_password_length=4;"
+    mysql -u root -p'{{ mysql_default_password.stdout }}' --connect-expired-password -e "SET GLOBAL validate_password_policy=LOW;"
+  when: not mycnf.stat.exists
+
+- name: change root user password
+  shell: |
+    mysql -u root -p'{{ mysql_default_password.stdout }}' --connect-expired-password -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'root';"
+  when: not mycnf.stat.exists
+
+- name: deploy changed .my.cnf
+  template:
+    src: templates/my.cnf.j2
+    dest: /root/.my.cnf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Install python-mysqldb
+  apt:
+    name: python-mysqldb
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Install MySQL-python
+  yum:
+    name: MySQL-python
+  when: ansible_os_family == 'RedHat'
+
+- name: create mysql user
+  mysql_user:
+    name: isucon
+    password: isucon
+    login_host: '{{ mysql.host }}'
+    login_user: '{{ mysql.root.user }}'
+    login_password: '{{ mysql.root.password }}'
+    priv: '*.*:ALL'
+    state: present
+
+- name: Copy data files
+  copy:
+    src: db
+    dest: /home/isucon/
+    owner: isucon
+    group: isucon
+    mode: 0644
+
+- name: Create databases
+  mysql_db:
+    db: '{{ item }}'
+    state: present
+    login_host: 127.0.0.1
+    login_user: root
+    login_password: root
+  with_items:
+    - isuda
+    - isutar
+
+- name: Import initial data to isuda
+  mysql_db:
+    name: isuda
+    target: '/home/isucon/db/{{ item }}.sql'
+    state: import
+    login_host: 127.0.0.1
+    login_user: root
+    login_password: root
+  with_items:
+    - isuda
+    - isuda_user
+    - isuda_entry
+  ignore_errors: yes
+
+- name: Import initial data to isutar
+  mysql_db:
+    name: isutar
+    target: '/home/isucon/db/{{ item }}.sql'
+    state: import
+    login_host: 127.0.0.1
+    login_user: root
+    login_password: root
+  with_items:
+    - isutar
+  ignore_errors: yes

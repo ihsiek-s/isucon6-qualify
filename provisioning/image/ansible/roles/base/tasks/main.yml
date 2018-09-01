@@ -1,0 +1,23 @@
+---
+- name: Create isucon group
+  group:
+    name: isucon
+
+- name: Create isucon user
+  user:
+    name: isucon
+    groups: isucon
+    home: /home/isucon
+
+- name: Add sudoers
+  copy:
+    content: "isucon  ALL=(ALL) NOPASSWD:ALL\n"
+    dest: /etc/sudoers.d/90-isucon-user
+    owner: root
+    group: root
+    mode: 0440
+
+- name: Set timezone to Asia/Tokyo
+  timezone:
+    name: Asia/Tokyo
+  notify: update timezone
